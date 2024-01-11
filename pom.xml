@@ -17,9 +17,9 @@
     <repository>
         <id>jitpack.io</id>
         <url>https://jitpack.io</url>
-        </repository>
+    </repository>
     <dependencies>
-        <dependency>
+         <dependency>
             <groupId>com.github.brenoepics</groupId>
             <artifactId>at4j</artifactId>
             <version>0.0.1</version>
