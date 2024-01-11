@@ -13,7 +13,11 @@
         <maven.compiler.target>19</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
+         
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+        </repository>
     <dependencies>
         <dependency>
             <groupId>com.github.brenoepics</groupId>
