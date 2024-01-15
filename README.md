@@ -10,7 +10,6 @@ This is a simple console application that uses the Azure Translator API to trans
 ## Dependencies
 
 - [azure-translator-for-java](https://github.com/brenoepics/at4j)
-- [okhttp](https://square.github.io/okhttp/)
 
 ## How to Run
 
@@ -24,7 +23,7 @@ This is a simple console application that uses the Azure Translator API to trans
 1. When prompted, enter your Azure Translator subscription key and region.
 2. Enter the text you want to translate.
 3. The translated text will be printed to the console in Portuguese, Spanish, French, and German.
-4. To exit the application, type 'exit'
+4. To exit the application, type 'exit' (or equivalent in any of the supported languages) and press enter.
 
 ## Note
 

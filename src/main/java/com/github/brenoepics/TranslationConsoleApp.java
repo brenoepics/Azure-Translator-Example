@@ -2,76 +2,75 @@ package com.github.brenoepics;
 
 import com.github.brenoepics.at4j.AzureApi;
 import com.github.brenoepics.at4j.AzureApiBuilder;
-import com.github.brenoepics.at4j.azure.BaseURL;
 import com.github.brenoepics.at4j.data.Translation;
 import com.github.brenoepics.at4j.data.request.TranslateParams;
 import com.github.brenoepics.at4j.data.request.optional.ProfanityAction;
 import com.github.brenoepics.at4j.data.request.optional.ProfanityMarker;
 import com.github.brenoepics.at4j.data.response.TranslationResponse;
-import okhttp3.OkHttpClient;
 
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class TranslationConsoleApp {
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+		private static AzureApi azureApi;
+		private static final List<Translation> exitTranslations = new ArrayList<>();
 
-        // Ask for a subscription key
-        System.out.print("Enter your Azure Translator subscription key: ");
-        String subscriptionKey = scanner.nextLine();
+		public static void main(String[] args) {
+				Scanner scanner = new Scanner(System.in);
 
-        // Ask for a subscription region
-        System.out.print("Enter your Azure Translator subscription region: ");
-        String subscriptionRegion = scanner.nextLine();
+				// Ask for a subscription key
+				System.out.print("Enter your Azure Translator subscription key: ");
+				String subscriptionKey = scanner.nextLine();
 
-        // Initialize Azure API
-        AzureApi azureApi = initializeAzureApi(subscriptionKey, subscriptionRegion);
+				// Ask for a subscription region
+				System.out.print("Enter your Azure Translator subscription region: ");
+				String subscriptionRegion = scanner.nextLine();
 
-        // Enter translation loop
-        while (true) {
-            System.out.print("Enter text to translate (or type 'exit' to end): ");
-            String inputText = scanner.nextLine();
+				// Initialize Azure API
+				azureApi = initializeAzureApi(subscriptionKey, subscriptionRegion);
+				exitTranslations.add(new Translation("en", "exit"));
+				translate("exit").ifPresent(response -> exitTranslations.addAll(response.getTranslations()));
 
-            if ("exit".equalsIgnoreCase(inputText)) {
-                System.out.println("Exiting translation loop. Goodbye!");
-                azureApi.getThreadPool().getExecutorService().shutdown();
-                break;
-            }
+				// Enter translation loop
+				while (true) {
+						System.out.print("Enter text to translate (or type 'exit' to end): ");
+						String inputText = scanner.nextLine();
 
-            // Translate input text
-            translateAndPrint(azureApi, inputText);
-        }
+						if (exitTranslations.stream().anyMatch(translation -> translation.getText().equalsIgnoreCase(inputText))) {
+								System.out.println("Exiting translation app. Goodbye!");
+								azureApi.getThreadPool().getExecutorService().shutdown();
+								break;
+						}
 
-        scanner.close();
-    }
+						// Translate input text
+						Optional<TranslationResponse> translate = translate(inputText);
 
-    private static AzureApi initializeAzureApi(String subscriptionKey, String subscriptionRegion) {
-        AzureApiBuilder builder = new AzureApiBuilder();
-        builder.setBaseURL(BaseURL.GLOBAL);
-        builder.setSubscriptionKey(subscriptionKey);
-        builder.setSubscriptionRegion(subscriptionRegion)
-                .setOkHttpClient(new OkHttpClient());
+						if (translate.isPresent()) {
+								translate.get().getTranslations().forEach(TranslationConsoleApp::printTranslation);
+						} else {
+								System.out.println("Translation failed.");
+						}
+				}
 
-        return builder.build();
-    }
+				scanner.close();
+		}
 
-    private static void translateAndPrint(AzureApi azureApi, String inputText) {
-        // Translate input text with profanity handling
-        TranslateParams params = new TranslateParams(inputText)
-                .setTargetLanguages("pt", "es", "fr", "de")
-                .setProfanityAction(ProfanityAction.MARKED)
-                .setProfanityMarker(ProfanityMarker.ASTERISK);
+		private static AzureApi initializeAzureApi(String subscriptionKey, String subscriptionRegion) {
+				AzureApiBuilder builder = new AzureApiBuilder().setKey(subscriptionKey).region(subscriptionRegion);
+				return builder.build();
+		}
 
-        CompletableFuture<Optional<TranslationResponse>> translationFuture = azureApi.translate(params);
-        Optional<TranslationResponse> translationOptional = translationFuture.join();
+		private static Optional<TranslationResponse> translate(String inputText) {
+				List<String> targetLanguages = Arrays.asList("pt", "es", "fr", "de");
+				// Translate input text with profanity handling
+				TranslateParams params = new TranslateParams(inputText, targetLanguages).setProfanityAction(ProfanityAction.MARKED).setProfanityMarker(ProfanityMarker.ASTERISK);
 
-        translationOptional.ifPresent(translation -> translation.getTranslations().forEach(TranslationConsoleApp::printTranslation));
-    }
+				CompletableFuture<Optional<TranslationResponse>> translationFuture = azureApi.translate(params);
+				return translationFuture.join();
+		}
 
-    private static void printTranslation(Translation translation) {
-        System.out.println("{" +translation.getLanguageCode() + "] Translated Text: " + translation.getText());
-    }
+		private static void printTranslation(Translation translation) {
+				System.out.println("{" + translation.getLanguageCode() + "] Translated Text: " + translation.getText());
+		}
 }
