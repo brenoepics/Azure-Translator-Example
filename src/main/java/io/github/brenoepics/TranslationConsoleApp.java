@@ -1,12 +1,12 @@
-package com.github.brenoepics;
+package io.github.brenoepics;
 
-import com.github.brenoepics.at4j.AzureApi;
-import com.github.brenoepics.at4j.AzureApiBuilder;
-import com.github.brenoepics.at4j.data.Translation;
-import com.github.brenoepics.at4j.data.request.TranslateParams;
-import com.github.brenoepics.at4j.data.request.optional.ProfanityAction;
-import com.github.brenoepics.at4j.data.request.optional.ProfanityMarker;
-import com.github.brenoepics.at4j.data.response.TranslationResponse;
+import io.github.brenoepics.at4j.AzureApi;
+import io.github.brenoepics.at4j.AzureApiBuilder;
+import io.github.brenoepics.at4j.data.Translation;
+import io.github.brenoepics.at4j.data.request.TranslateParams;
+import io.github.brenoepics.at4j.data.request.optional.ProfanityAction;
+import io.github.brenoepics.at4j.data.request.optional.ProfanityMarker;
+import io.github.brenoepics.at4j.data.response.TranslationResponse;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
