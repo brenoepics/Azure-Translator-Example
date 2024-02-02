@@ -13,64 +13,77 @@ import java.util.concurrent.CompletableFuture;
 
 public class TranslationConsoleApp {
 
-		private static AzureApi azureApi;
-		private static final List<Translation> exitTranslations = new ArrayList<>();
+  private static AzureApi azureApi;
+  private static final List<Translation> exitTranslations = new ArrayList<>();
 
-		public static void main(String[] args) {
-				Scanner scanner = new Scanner(System.in);
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
 
-				// Ask for a subscription key
-				System.out.print("Enter your Azure Translator subscription key: ");
-				String subscriptionKey = scanner.nextLine();
+    // Ask for a subscription key
+    System.out.print("Enter your Azure Translator subscription key: ");
+    String subscriptionKey = scanner.nextLine();
 
-				// Ask for a subscription region
-				System.out.print("Enter your Azure Translator subscription region: ");
-				String subscriptionRegion = scanner.nextLine();
+    // Ask for a subscription region
+    System.out.print("Enter your Azure Translator subscription region: ");
+    String subscriptionRegion = scanner.nextLine();
 
-				// Initialize Azure API
-				azureApi = initializeAzureApi(subscriptionKey, subscriptionRegion);
-				exitTranslations.add(new Translation("en", "exit"));
-				translate("exit").ifPresent(response -> exitTranslations.addAll(response.getTranslations()));
+    // Initialize Azure API
+    azureApi = initializeAzureApi(subscriptionKey, subscriptionRegion);
+    exitTranslations.add(new Translation("en", "exit"));
+    translate("exit")
+        .ifPresent(
+            response -> exitTranslations.addAll(response.getResultList().get(0).getTranslations()));
 
-				// Enter translation loop
-				while (true) {
-						System.out.print("Enter text to translate (or type 'exit' to end): ");
-						String inputText = scanner.nextLine();
+    // Enter translation loop
+    while (true) {
+      System.out.print("Enter text to translate (or type 'exit' to end): ");
+      String inputText = scanner.nextLine();
 
-						if (exitTranslations.stream().anyMatch(translation -> translation.getText().equalsIgnoreCase(inputText))) {
-								System.out.println("Exiting translation app. Goodbye!");
-								azureApi.getThreadPool().getExecutorService().shutdown();
-								break;
-						}
+      if (exitTranslations.stream()
+          .anyMatch(translation -> translation.getText().equalsIgnoreCase(inputText))) {
+        System.out.println("Exiting translation app. Goodbye!");
+        azureApi.getThreadPool().getExecutorService().shutdown();
+        break;
+      }
 
-						// Translate input text
-						Optional<TranslationResponse> translate = translate(inputText);
+      // Translate input text
+      Optional<TranslationResponse> translate = translate(inputText);
 
-						if (translate.isPresent()) {
-								translate.get().getTranslations().forEach(TranslationConsoleApp::printTranslation);
-						} else {
-								System.out.println("Translation failed.");
-						}
-				}
+      if (translate.isPresent()) {
+        translate
+            .get()
+            .getResultList()
+            .get(0)
+            .getTranslations()
+            .forEach(TranslationConsoleApp::printTranslation);
+      } else {
+        System.out.println("Translation failed.");
+      }
+    }
 
-				scanner.close();
-		}
+    scanner.close();
+  }
 
-		private static AzureApi initializeAzureApi(String subscriptionKey, String subscriptionRegion) {
-				AzureApiBuilder builder = new AzureApiBuilder().setKey(subscriptionKey).region(subscriptionRegion);
-				return builder.build();
-		}
+  private static AzureApi initializeAzureApi(String subscriptionKey, String subscriptionRegion) {
+    AzureApiBuilder builder =
+        new AzureApiBuilder().setKey(subscriptionKey).region(subscriptionRegion);
+    return builder.build();
+  }
 
-		private static Optional<TranslationResponse> translate(String inputText) {
-				List<String> targetLanguages = Arrays.asList("pt", "es", "fr", "de");
-				// Translate input text with profanity handling
-				TranslateParams params = new TranslateParams(inputText, targetLanguages).setProfanityAction(ProfanityAction.MARKED).setProfanityMarker(ProfanityMarker.ASTERISK);
+  private static Optional<TranslationResponse> translate(String inputText) {
+    List<String> targetLanguages = Arrays.asList("pt", "es", "fr", "de");
+    // Translate input text with profanity handling
+    TranslateParams params =
+        new TranslateParams(inputText, targetLanguages)
+            .setProfanityAction(ProfanityAction.MARKED)
+            .setProfanityMarker(ProfanityMarker.ASTERISK);
 
-				CompletableFuture<Optional<TranslationResponse>> translationFuture = azureApi.translate(params);
-				return translationFuture.join();
-		}
+    CompletableFuture<Optional<TranslationResponse>> translationFuture = azureApi.translate(params);
+    return translationFuture.join();
+  }
 
-		private static void printTranslation(Translation translation) {
-				System.out.println("{" + translation.getLanguageCode() + "] Translated Text: " + translation.getText());
-		}
+  private static void printTranslation(Translation translation) {
+    System.out.println(
+        "{" + translation.getLanguageCode() + "] Translated Text: " + translation.getText());
+  }
 }
