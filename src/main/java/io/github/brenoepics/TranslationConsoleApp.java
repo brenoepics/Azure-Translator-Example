@@ -7,6 +7,7 @@ import io.github.brenoepics.at4j.data.request.TranslateParams;
 import io.github.brenoepics.at4j.data.request.optional.ProfanityAction;
 import io.github.brenoepics.at4j.data.request.optional.ProfanityMarker;
 import io.github.brenoepics.at4j.data.response.TranslationResponse;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -17,27 +18,19 @@ public class TranslationConsoleApp {
   private static final List<Translation> exitTranslations = new ArrayList<>();
 
   public static void main(String[] args) {
-    Scanner scanner = new Scanner(System.in);
-
-    // Ask for a subscription key
-    System.out.print("Enter your Azure Translator subscription key: ");
-    String subscriptionKey = scanner.nextLine();
-
-    // Ask for a subscription region
-    System.out.print("Enter your Azure Translator subscription region: ");
-    String subscriptionRegion = scanner.nextLine();
+    AzureSubscription keys = getAzureSubscription();
 
     // Initialize Azure API
-    azureApi = initializeAzureApi(subscriptionKey, subscriptionRegion);
+    azureApi = initializeAzureApi(keys.subscriptionKey(), keys.subscriptionRegion());
     exitTranslations.add(new Translation("en", "exit"));
     translate("exit")
         .ifPresent(
-            response -> exitTranslations.addAll(response.getResultList().get(0).getTranslations()));
+            response -> exitTranslations.addAll(response.getResultList().getFirst().getTranslations()));
 
     // Enter translation loop
     while (true) {
       System.out.print("Enter text to translate (or type 'exit' to end): ");
-      String inputText = scanner.nextLine();
+      String inputText = keys.scanner().nextLine();
 
       if (exitTranslations.stream()
           .anyMatch(translation -> translation.getText().equalsIgnoreCase(inputText))) {
@@ -53,7 +46,7 @@ public class TranslationConsoleApp {
         translate
             .get()
             .getResultList()
-            .get(0)
+            .getFirst()
             .getTranslations()
             .forEach(TranslationConsoleApp::printTranslation);
       } else {
@@ -61,7 +54,24 @@ public class TranslationConsoleApp {
       }
     }
 
-    scanner.close();
+    keys.scanner().close();
+  }
+
+  static @NotNull AzureSubscription getAzureSubscription() {
+    Scanner scanner = new Scanner(System.in);
+
+    // Ask for a subscription key
+    System.out.print("Enter your Azure Translator subscription key: ");
+    String subscriptionKey = scanner.nextLine();
+
+    // Ask for a subscription region
+    System.out.print("Enter your Azure Translator subscription region: ");
+    String subscriptionRegion = scanner.nextLine();
+    AzureSubscription keys = new AzureSubscription(scanner, subscriptionKey, subscriptionRegion);
+    return keys;
+  }
+
+  record AzureSubscription(Scanner scanner, String subscriptionKey, String subscriptionRegion) {
   }
 
   private static AzureApi initializeAzureApi(String subscriptionKey, String subscriptionRegion) {
