@@ -1,4 +1,4 @@
-# Azure Translator Example
+# Azure Translator App
 
 This is a console application that leverages the Azure Translator API to translate user input text. The application
 requests the Azure Translator subscription key and region, then enters a loop where it prompts for text to translate.
